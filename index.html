@@ -1,0 +1,356 @@
+# hawww
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Thử Thách Nhuộm Tóc Cùng Anh Bé 🎀</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&family=Nunito:wght@600;800;900&display=swap" rel="stylesheet">
+  
+  <style>
+    * {
+      touch-action: manipulation;
+      -webkit-tap-highlight-color: transparent;
+      user-select: none;
+    }
+
+    body {
+      font-family: 'Nunito', sans-serif;
+      background: linear-gradient(135deg, #ffdeeb 0%, #ffafcc 50%, #f72585 100%);
+      min-height: 100vh;
+      min-height: -webkit-fill-available;
+      overflow-x: hidden;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    html {
+      height: -webkit-fill-available;
+    }
+
+    .font-cute {
+      font-family: 'Fredoka', cursive, sans-serif;
+    }
+
+    /* Floating Stickers Animation */
+    .sticker {
+      position: absolute;
+      pointer-events: none;
+      z-index: 1;
+      animation: floatSticker 4s ease-in-out infinite alternate;
+      filter: drop-shadow(0 4px 6px rgba(0,0,0,0.1));
+    }
+
+    @keyframes floatSticker {
+      0% { transform: translateY(0px) rotate(-8deg) scale(1); }
+      100% { transform: translateY(-18px) rotate(8deg) scale(1.05); }
+    }
+
+    /* Button 3D & Click Effects */
+    .btn-cute {
+      transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+      box-shadow: 0 6px 0px #db2777, 0 10px 15px rgba(219, 39, 119, 0.3);
+    }
+    
+    .btn-cute:active {
+      transform: translateY(4px);
+      box-shadow: 0 2px 0px #db2777, 0 4px 6px rgba(219, 39, 119, 0.3);
+    }
+
+    .btn-blue {
+      box-shadow: 0 6px 0px #0284c7, 0 10px 15px rgba(2, 132, 199, 0.3);
+    }
+    
+    .btn-blue:active {
+      transform: translateY(4px);
+      box-shadow: 0 2px 0px #0284c7, 0 4px 6px rgba(2, 132, 199, 0.3);
+    }
+
+    /* Card Glow and Float */
+    .glass-card {
+      background: rgba(255, 255, 255, 0.93);
+      backdrop-filter: blur(12px);
+      border: 4px solid #ff85a2;
+      box-shadow: 0 20px 40px rgba(255, 77, 109, 0.25);
+    }
+
+    /* Floating background elements */
+    .heart-bg {
+      position: absolute;
+      color: rgba(255, 255, 255, 0.4);
+      animation: floatUp 8s linear infinite;
+      pointer-events: none;
+    }
+
+    @keyframes floatUp {
+      0% { transform: translateY(105vh) scale(0.5) rotate(0deg); opacity: 0; }
+      20% { opacity: 0.8; }
+      100% { transform: translateY(-10vh) scale(1.2) rotate(360deg); opacity: 0; }
+    }
+
+    /* Shaking effect for wrong answer */
+    .shake {
+      animation: shake 0.4s cubic-bezier(.36,.07,.19,.97) both;
+    }
+
+    @keyframes shake {
+      10%, 90% { transform: translate3d(-2px, 0, 0); }
+      20%, 80% { transform: translate3d(4px, 0, 0); }
+      30%, 50%, 70% { transform: translate3d(-6px, 0, 0); }
+      40%, 60% { transform: translate3d(6px, 0, 0); }
+    }
+
+    /* Smooth runaway transition for YES button */
+    #btnYes {
+      position: absolute;
+      transition: all 0.2s ease-out;
+      z-index: 30;
+      touch-action: none;
+    }
+  </style>
+</head>
+<body class="p-4 relative min-h-screen flex items-center justify-center">
+
+  <!-- Background Animated Hearts -->
+  <div id="heartsContainer" class="fixed inset-0 pointer-events-none overflow-hidden"></div>
+
+  <!-- Decorative Floating Stickers -->
+  <div class="sticker text-4xl sm:text-5xl top-4 left-4" style="animation-delay: 0s;">🎀</div>
+  <div class="sticker text-4xl sm:text-5xl top-12 right-6" style="animation-delay: 0.8s;">🧸</div>
+  <div class="sticker text-4xl sm:text-5xl bottom-6 left-6" style="animation-delay: 1.5s;">🍓</div>
+  <div class="sticker text-4xl sm:text-5xl bottom-10 right-4" style="animation-delay: 2.2s;">✨</div>
+
+  <!-- Main Game Container -->
+  <main class="w-full max-w-md glass-card rounded-3xl p-5 sm:p-7 text-center relative z-10 my-auto">
+    
+    <!-- Header Indicator -->
+    <div id="progressBadge" class="inline-flex items-center gap-1.5 bg-pink-100 text-pink-600 px-4 py-1.5 rounded-full font-bold text-xs sm:text-sm mb-4 border border-pink-300">
+      <span class="animate-pulse">💖</span>
+      <span id="progressText">CÂU HỎI 1 / 2</span>
+      <span class="animate-pulse">💖</span>
+    </div>
+
+    <!-- ================= QUESTION 1 ================= -->
+    <section id="question1" class="space-y-4">
+      <h1 class="font-cute text-xl sm:text-2xl text-pink-600 font-bold leading-snug">
+        Anh bé thích gì nhất nè? 🥺✨
+      </h1>
+
+      <div class="space-y-2.5 pt-2">
+        <button onclick="handleWrongAnswer(this)" class="btn-cute w-full bg-pink-400 hover:bg-pink-500 text-white font-bold py-3 px-4 rounded-2xl text-base sm:text-lg flex items-center justify-between">
+          <span>A. Ăn vặt</span>
+          <span>🍧</span>
+        </button>
+
+        <button onclick="handleWrongAnswer(this)" class="btn-cute w-full bg-pink-400 hover:bg-pink-500 text-white font-bold py-3 px-4 rounded-2xl text-base sm:text-lg flex items-center justify-between">
+          <span>B. Chơi game</span>
+          <span>🎮</span>
+        </button>
+
+        <button onclick="handleCorrectQ1()" class="btn-cute w-full bg-pink-500 hover:bg-pink-600 text-white font-extrabold py-3.5 px-4 rounded-2xl text-lg sm:text-xl flex items-center justify-between border-2 border-yellow-200">
+          <span>C. Thik vợ</span>
+          <span class="text-2xl">👩‍❤️‍👨</span>
+        </button>
+
+        <button onclick="handleWrongAnswer(this)" class="btn-cute w-full bg-pink-400 hover:bg-pink-500 text-white font-bold py-3 px-4 rounded-2xl text-base sm:text-lg flex items-center justify-between">
+          <span>D. Thích xem vợ móc</span>
+          <span>🧶</span>
+        </button>
+      </div>
+
+      <!-- Error Toast Msg -->
+      <div id="errorToast" class="hidden bg-red-100 border-2 border-red-300 text-red-600 p-3 rounded-2xl text-xs sm:text-sm font-bold mt-3 animate-bounce">
+        😤 Sai rùi nha! Anh bé chỉ thích mỗi vợ thui! Chọn lại đii! 🥺❤️
+      </div>
+    </section>
+
+    <!-- ================= QUESTION 2 ================= -->
+    <section id="question2" class="hidden space-y-4">
+      <h1 class="font-cute text-2xl sm:text-3xl text-pink-600 font-bold leading-snug">
+        Vợ thích nhuộm tóc không? 💇‍♀️✨
+      </h1>
+      <p class="text-xs text-pink-400 font-bold">Chạm thật nhanh vào câu trả lời của vợ nha!</p>
+
+      <!-- Runaway Area container -->
+      <div id="runawayArea" class="relative w-full h-48 bg-pink-50/60 rounded-2xl border-2 border-dashed border-pink-300 overflow-hidden flex items-center justify-center">
+        
+        <!-- RUNAWAY YES BUTTON -->
+        <button id="btnYes" 
+                class="btn-cute bg-pink-500 text-white font-extrabold px-6 py-3 rounded-2xl text-lg shadow-lg flex items-center gap-1">
+          <span>1. Có</span>
+          <span>💅</span>
+        </button>
+
+        <!-- NO BUTTON (WIN TRIGGER) -->
+        <button id="btnNo" onclick="handleWin()" 
+                class="btn-blue bg-sky-500 hover:bg-sky-600 text-white font-extrabold px-7 py-3.5 rounded-2xl text-lg sm:text-xl absolute right-6 bottom-6 z-20">
+          2. Là không 🥺
+        </button>
+      </div>
+    </section>
+
+    <!-- ================= VICTORY SCREEN ================= -->
+    <section id="victoryScreen" class="hidden space-y-5 py-2">
+      <div class="text-6xl sm:text-7xl animate-bounce my-2">💇‍♀️🥳🎉</div>
+      
+      <h1 class="font-cute text-2xl sm:text-3xl text-pink-600 font-extrabold tracking-wide">
+        VỢ ĐÃ THẮNG RÙI! ❤️
+      </h1>
+
+      <div class="bg-pink-100/80 border-2 border-pink-300 p-4 rounded-2xl text-gray-800 text-sm sm:text-base font-bold space-y-2 leading-relaxed">
+        <p class="text-pink-600 font-extrabold text-lg">Ngoan lắm! 🥰</p>
+        <p>Bé đồng ý cho vợ nhuộm tóc rùi nha! ✨</p>
+        <p class="text-pink-500 text-xs sm:text-sm">Màu gì anh bé cũng duyệt hết luôn nè! 💖🎨</p>
+      </div>
+
+      <button onclick="restartGame()" class="btn-cute bg-pink-500 text-white font-bold py-2.5 px-6 rounded-xl text-sm mt-4">
+        Chơi lại lần nữa 🔄
+      </button>
+    </section>
+
+  </main>
+
+  <script>
+    // --- 1. BACKGROUND FLOATING HEARTS GENERATOR ---
+    function createHearts() {
+      const container = document.getElementById('heartsContainer');
+      const heartEmojis = ['💖', '💗', '🌸', '✨', '💕', '🌷'];
+      
+      for (let i = 0; i < 15; i++) {
+        const heart = document.createElement('div');
+        heart.className = 'heart-bg text-xl sm:text-2xl';
+        heart.innerText = heartEmojis[Math.floor(Math.random() * heartEmojis.length)];
+        heart.style.left = `${Math.random() * 100}%`;
+        heart.style.animationDuration = `${6 + Math.random() * 6}s`;
+        heart.style.animationDelay = `${Math.random() * 5}s`;
+        container.appendChild(heart);
+      }
+    }
+    createHearts();
+
+    // --- 2. QUESTION 1 LOGIC ---
+    function handleWrongAnswer(btnElement) {
+      const card = document.querySelector('main');
+      const errorToast = document.getElementById('errorToast');
+      
+      // Shake effect
+      card.classList.remove('shake');
+      void card.offsetWidth; // trigger reflow
+      card.classList.add('shake');
+
+      // Show Toast
+      errorToast.classList.remove('hidden');
+
+      // Haptic feedback for mobile if supported
+      if (navigator.vibrate) {
+        navigator.vibrate(150);
+      }
+    }
+
+    function handleCorrectQ1() {
+      document.getElementById('question1').classList.add('hidden');
+      document.getElementById('question2').classList.remove('hidden');
+      document.getElementById('errorToast').classList.add('hidden');
+      document.getElementById('progressText').innerText = "CÂU HỎI 2 / 2";
+
+      // Setup initial position for YES button inside runaway area
+      initRunawayButton();
+    }
+
+    // --- 3. QUESTION 2 RUNAWAY BUTTON LOGIC ---
+    const btnYes = document.getElementById('btnYes');
+    const runawayArea = document.getElementById('runawayArea');
+
+    function initRunawayButton() {
+      // Place YES button at top-left corner initially
+      btnYes.style.left = '16px';
+      btnYes.style.top = '16px';
+    }
+
+    function moveYesButton(e) {
+      if (e) e.preventDefault();
+
+      const containerRect = runawayArea.getBoundingClientRect();
+      const btnRect = btnYes.getBoundingClientRect();
+
+      // Ensure button stays strictly within runaway container bounds
+      const padding = 10;
+      const maxX = containerRect.width - btnRect.width - padding;
+      const maxY = containerRect.height - btnRect.height - padding;
+
+      const randomX = Math.max(padding, Math.floor(Math.random() * maxX));
+      const randomY = Math.max(padding, Math.floor(Math.random() * maxY));
+
+      btnYes.style.left = `${randomX}px`;
+      btnYes.style.top = `${randomY}px`;
+
+      // Trigger light vibration if supported
+      if (navigator.vibrate) {
+        navigator.vibrate(40);
+      }
+    }
+
+    // Mobile touch & mouse events for Runaway button
+    btnYes.addEventListener('touchstart', moveYesButton, { passive: false });
+    btnYes.addEventListener('mouseover', moveYesButton);
+    btnYes.addEventListener('click', moveYesButton);
+
+    // --- 4. VICTORY LOGIC ---
+    function handleWin() {
+      document.getElementById('question2').classList.add('hidden');
+      document.getElementById('progressBadge').classList.add('hidden');
+      document.getElementById('victoryScreen').classList.remove('hidden');
+
+      // Launch Confetti Effect
+      launchConfetti();
+    }
+
+    function launchConfetti() {
+      const count = 200;
+      const defaults = {
+        origin: { y: 0.7 }
+      };
+
+      function fire(particleRatio, opts) {
+        confetti({
+          ...defaults,
+          ...opts,
+          particleCount: Math.floor(count * particleRatio)
+        });
+      }
+
+      fire(0.25, {
+        spread: 26,
+        startVelocity: 55,
+        colors: ['#ff85a2', '#ff4d6d', '#ffffff']
+      });
+      fire(0.2, {
+        spread: 60,
+        colors: ['#38bdf8', '#f472b6', '#facc15']
+      });
+      fire(0.35, {
+        spread: 100,
+        decay: 0.91,
+        scalar: 0.8
+      });
+      fire(0.1, {
+        spread: 120,
+        startVelocity: 25,
+        decay: 0.92,
+        colors: ['#ffffff', '#ff85a2']
+      });
+    }
+
+    // --- 5. RESTART GAME ---
+    function restartGame() {
+      document.getElementById('victoryScreen').classList.add('hidden');
+      document.getElementById('question1').classList.remove('hidden');
+      document.getElementById('progressBadge').classList.remove('hidden');
+      document.getElementById('progressText').innerText = "CÂU HỎI 1 / 2";
+    }
+  </script>
+</body>
+</html>
